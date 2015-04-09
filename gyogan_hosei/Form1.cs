@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-
+using System.Windows.Forms;
 
 namespace WindowsFormsApplication1
 {
@@ -97,9 +97,11 @@ namespace WindowsFormsApplication1
                 {
                     xLog(fn + "はフォルダです。");
                     string[] files = System.IO.Directory.GetFiles(fn, "*", System.IO.SearchOption.AllDirectories);  //fn内のファイルを取得
-                    foreach (string fn2 in files)
+                    int n = files.Length;
+                    for(int j=0;j<n;j++)
                     {
-                        xHosei(fn2);
+                        xLog(j + "/" + n);
+                        xHosei(files[j]);
                     }
 
                 }
@@ -110,6 +112,7 @@ namespace WindowsFormsApplication1
         //ファイルを補正して保存する
         private void xHosei(string fn)
         {
+            xLog(fn + "を処理中..");
             if (System.IO.Path.GetExtension(fn).Equals(".jpg") || System.IO.Path.GetExtension(fn).Equals(".JPG"))
             {
                 //pictureBox1.ImageLocation = fn;
@@ -140,6 +143,9 @@ namespace WindowsFormsApplication1
 
 
                 }
+                bitmap.Dispose();
+                bitmap2.Dispose();
+                Application.DoEvents();
             }
 
         }
