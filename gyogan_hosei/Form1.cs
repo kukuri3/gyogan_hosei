@@ -80,81 +80,72 @@ namespace WindowsFormsApplication1
             //ドロップされたすべてのファイル名を取得する
             string[] fileName =
                 (string[])e.Data.GetData(DataFormats.FileDrop, false);
-            //ListBoxに追加する
-            //listBox1.Items.AddRange(fileName);
-            
+
+
+
             for (int i = 0; i < fileName.Length; i++)
             {
                 string fn = fileName[i];
                 xLog(fn + "を処理中..");
-                if (System.IO.Path.GetExtension(fn).Equals(".jpg")||System.IO.Path.GetExtension(fn).Equals(".JPG"))
-                {
-                    //pictureBox1.ImageLocation = fn;
-                    pictureBox1.Image = new Bitmap(fn); //picturebox1にファイルから読み込む
-                    pictureBox1.Refresh();
 
-                    //Exif情報を列挙する
-                    
+                if (System.IO.Directory.Exists(fn) == false)
+                {
+                    xLog(fn + "はファイルです。");
+                    xHosei(fn);
+                }
+                else
+                {
+                    xLog(fn + "はフォルダです。");
+                    string[] files = System.IO.Directory.GetFiles(fn, "*", System.IO.SearchOption.AllDirectories);  //fn内のファイルを取得
+                    foreach (string fn2 in files)
+                    {
+                        xHosei(fn2);
+                    }
+
+                }
+
+            }
+
+        }
+        //ファイルを補正して保存する
+        private void xHosei(string fn)
+        {
+            if (System.IO.Path.GetExtension(fn).Equals(".jpg") || System.IO.Path.GetExtension(fn).Equals(".JPG"))
+            {
+                //pictureBox1.ImageLocation = fn;
+                pictureBox1.Image = new Bitmap(fn); //picturebox1にファイルから読み込む
+                pictureBox1.Refresh();
+                Bitmap bitmap = new Bitmap(pictureBox1.Image);  //picturebox1から画像を読み込む
+                Bitmap bitmap2 = new Bitmap(bitmap.Width, bitmap.Height);
+                //                    xImageProcess(bitmap, bitmap2);
+                xImageProcessGyogan(bitmap, bitmap2);   //画像処理をして、その結果がpicturebox2に入る
+
+                pictureBox2.Refresh();
+                //pictureBox2.Image = bitmap2;
+                if (checkBox1.Checked == true)
+                {    //保存する場合
+                    string dir = System.IO.Path.GetDirectoryName(fn);
+                    string filename = System.IO.Path.GetFileNameWithoutExtension(fn);
+                    string ext = System.IO.Path.GetExtension(fn);
+                    string fn2 = System.IO.Path.Combine(dir, filename + "_hosei" + ext);
+
+
+                    //exif情報をコピーする
                     foreach (System.Drawing.Imaging.PropertyItem item in pictureBox1.Image.PropertyItems)
                     {
-                        //データの型を判断
-                        if (item.Type == 2)
-                        {
-                            //ASCII文字の場合は、文字列に変換する
-                            string val = System.Text.Encoding.ASCII.GetString(item.Value);
-                            val = val.Trim(new char[] { '\0' });
-                            //表示する
-                            xLog("id:"+item.Id+" type:"+item.Type+" val"+ val);
-                        }
-                        else
-                        {
-                            //表示する
-                            xLog("id:" + item.Id + " type:" + item.Type + " len:" + item.Len);
-                        }
+                        bitmap2.SetPropertyItem(item);
                     }
+                    //保存する
+                    bitmap2.Save(fn2, System.Drawing.Imaging.ImageFormat.Jpeg);
 
 
-                    Bitmap bitmap = new Bitmap(pictureBox1.Image);  //picturebox1から画像を読み込む
-                    Bitmap bitmap2 = new Bitmap(bitmap.Width,bitmap.Height);
-//                    xImageProcess(bitmap, bitmap2);
-                    xImageProcessGyogan(bitmap, bitmap2);   //画像処理をして、その結果がpicturebox2に入る
-
-                    pictureBox2.Refresh();
-                    //pictureBox2.Image = bitmap2;
-                    if (checkBox1.Checked == true)
-                    {    //保存する場合
-                        string dir = System.IO.Path.GetDirectoryName(fn);
-                        string filename = System.IO.Path.GetFileNameWithoutExtension(fn);
-                        string ext = System.IO.Path.GetExtension(fn);
-                        string fn2 = System.IO.Path.Combine(dir, filename + "_hosei"+ext);
-                        /*
-                        //JPEGの品質を設定
-                        System.Drawing.Imaging.EncoderParameters eps = new System.Drawing.Imaging.EncoderParameters(1);
-                        //品質を指定
-                        System.Drawing.Imaging.EncoderParameter ep =
-                            new System.Drawing.Imaging.EncoderParameter(
-                            System.Drawing.Imaging.Encoder.Quality, (long)90);
-                        //EncoderParametersにセットする
-                        eps.Param[0] = ep;
-
-                        //イメージエンコーダに関する情報を取得する
-                        System.Drawing.Imaging.ImageCodecInfo ici = GetEncoderInfo("image/jpeg");
-                        */
-
-                        //exif情報をコピーする
-                        foreach (System.Drawing.Imaging.PropertyItem item in pictureBox1.Image.PropertyItems)
-                        {
-                            bitmap2.SetPropertyItem(item);
-                        }
-                        //保存する
-                        bitmap2.Save(fn2, System.Drawing.Imaging.ImageFormat.Jpeg);
-
-
-                    }
                 }
             }
 
         }
+
+
+
         //MimeTypeで指定されたImageCodecInfoを探して返す
         private static System.Drawing.Imaging.ImageCodecInfo
             GetEncoderInfo(string mineType)
